@@ -1,121 +1,214 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulador de Juros - SOX36 e TSVUSDT</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Simulador de Juros - SOX36 / TSVUSDT</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
+    :root{
+      --bg:#0f172a;
+      --card:#111827;
+      --muted:#94a3b8;
+      --accent:#38bdf8;
+      --accent-2:#22c55e;
     }
-
-    h1 {
-      color: #38bdf8;
-      margin-bottom: 20px;
+    body{
+      margin:0;
+      font-family:Inter, system-ui, Arial, sans-serif;
+      background:var(--bg);
+      color:#e6eef6;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:40px 16px;
+      min-height:100vh;
     }
-
-    .card {
-      background: #1e293b;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.4);
-      width: 320px;
-      text-align: center;
+    .wrap{
+      width:100%;
+      max-width:980px;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:20px;
     }
-
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 6px;
-      border: none;
-      font-size: 16px;
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.03);
+      padding:18px;
+      border-radius:12px;
+      box-shadow:0 6px 20px rgba(2,6,23,0.6);
     }
-
-    input {
-      background-color: #334155;
-      color: #f8fafc;
+    h1{margin:0 0 12px 0; color:var(--accent);}
+    label{display:block; font-size:13px; color:var(--muted); margin-top:10px;}
+    input, select, button{
+      width:100%;
+      padding:10px 12px;
+      margin-top:8px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.04);
+      background:#0b1220;
+      color:#e6eef6;
+      font-size:15px;
+      outline:none;
     }
-
-    select {
-      background-color: #334155;
-      color: #f8fafc;
+    .actions{display:flex; gap:10px; margin-top:12px;}
+    button.primary{background:var(--accent); color:#03202b; border:none; cursor:pointer; font-weight:700;}
+    button.ghost{background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted); cursor:pointer;}
+    #resultado{margin-top:12px; font-weight:700; color:var(--accent-2);}
+    /* tabela */
+    .table-wrap{overflow:auto;}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin:0;
+      font-size:14px;
+      color:#dbeafe;
     }
-
-    button {
-      background-color: #38bdf8;
-      color: #0f172a;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s;
+    th, td{
+      padding:8px 10px;
+      border-bottom:1px solid rgba(255,255,255,0.03);
+      text-align:right;
     }
-
-    button:hover {
-      background-color: #0ea5e9;
-    }
-
-    #resultado {
-      margin-top: 15px;
-      font-weight: bold;
-      color: #22d3ee;
+    th{background:rgba(0,0,0,0.25); text-align:center; color:#e6f2ff;}
+    td.left, th.left { text-align:left; }
+    .summary{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;}
+    .pill{background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; font-weight:600;}
+    @media (max-width:900px){
+      .wrap{grid-template-columns:1fr; padding-bottom:60px;}
     }
   </style>
 </head>
 <body>
-  <h1>Simulador de Juros</h1>
+  <div class="wrap">
+    <div class="card">
+      <h1>Simulador de Juros</h1>
 
-  <div class="card">
-    <label for="valor">Valor Investido (USDT):</label>
-    <input type="number" id="valor" placeholder="Ex: 1000">
+      <label for="valor">Valor inicial (USDT)</label>
+      <input id="valor" type="number" min="0" step="0.01" placeholder="Ex: 1000">
 
-    <label for="opcao">Selecione a opção:</label>
-    <select id="opcao">
-      <option value="1">SOX36 — Juros 4,5% | Comissão 2,5%</option>
-      <option value="2">TSVUSDT — Juros 6,3% | Comissão 4,0%</option>
-    </select>
+      <label for="dias">Número de dias</label>
+      <input id="dias" type="number" min="1" step="1" placeholder="Ex: 20">
 
-    <button onclick="calcular()">Calcular</button>
+      <label for="opcao">Opção / Estratégia</label>
+      <select id="opcao">
+        <option value="1">SOX36 — Juros 4,5% / Comissão 2,5% (ao dia)</option>
+        <option value="2">TSVUSDT — Juros 6,3% / Comissão 4,0% (ao dia)</option>
+      </select>
 
-    <div id="resultado"></div>
+      <div class="actions">
+        <button class="primary" onclick="calcular()">Calcular</button>
+        <button class="ghost" onclick="limpar()">Limpar</button>
+      </div>
+
+      <div id="resultado"></div>
+
+      <div class="summary" id="summary"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;color:#c7f9ff">Evolução diária</h2>
+      <div class="table-wrap" id="tabela-container" style="max-height:70vh"></div>
+    </div>
   </div>
 
   <script>
-    function calcular() {
-      const valor = parseFloat(document.getElementById("valor").value);
-      const opcao = document.getElementById("opcao").value;
-      let juros, comissao;
+    // Função principal
+    function calcular(){
+      const valorInput = document.getElementById('valor').value;
+      const diasInput = document.getElementById('dias').value;
+      const opcao = document.getElementById('opcao').value;
+      const resultadoEl = document.getElementById('resultado');
+      const tabelaContainer = document.getElementById('tabela-container');
+      const summary = document.getElementById('summary');
+
+      tabelaContainer.innerHTML = '';
+      resultadoEl.textContent = '';
+      summary.innerHTML = '';
+
+      const valor = parseFloat(valorInput);
+      const dias = parseInt(diasInput, 10);
 
       if (isNaN(valor) || valor <= 0) {
-        document.getElementById("resultado").innerText = "Por favor, insira um valor válido.";
+        resultadoEl.style.color = '#ff7b7b';
+        resultadoEl.textContent = 'Informe um valor inicial válido.';
+        return;
+      }
+      if (isNaN(dias) || dias <= 0) {
+        resultadoEl.style.color = '#ff7b7b';
+        resultadoEl.textContent = 'Informe um número de dias válido (>= 1).';
         return;
       }
 
-      if (opcao === "1") {
-        juros = 4.5 / 100;
-        comissao = 2.5 / 100;
-      } else if (opcao === "2") {
-        juros = 6.3 / 100;
-        comissao = 4.0 / 100;
+      // definir taxas por opção (ao dia, em %)
+      let jurosPct, comissaoPct;
+      if (opcao === '1') {
+        jurosPct = 4.5;
+        comissaoPct = 2.5;
+      } else {
+        jurosPct = 6.3;
+        comissaoPct = 4.0;
       }
 
-      const rendimento = valor * juros;
-      const desconto = valor * comissao;
-      const total = valor + rendimento - desconto;
+      // taxa líquida aplicada como composto diário: (juros - comissão)
+      const taxaLiquida = (jurosPct - comissaoPct) / 100; // ex: 0.018
 
-      document.getElementById("resultado").innerHTML = `
-        <p>Valor inicial: ${valor.toFixed(2)} USDT</p>
-        <p>Rendimento: ${(rendimento).toFixed(2)} USDT</p>
-        <p>Comissão: ${(desconto).toFixed(2)} USDT</p>
-        <p><strong>Total final: ${total.toFixed(2)} USDT</strong></p>
+      // Monta tabela dia a dia
+      let html = '<table><thead><tr><th class="left">Dia</th><th>Valor acumulado (USDT)</th><th>Rendimento líquido diário (USDT)</th></tr></thead><tbody>';
+      let valorAtual = valor;
+      let totalRendimento = 0;
+      let totalComissao = 0;
+
+      for (let i = 1; i <= dias; i++) {
+        const valorAnterior = valorAtual;
+
+        // Aplicando juros bruto e comissão separadamente por dia (para cálculo de comissão diária)
+        // juros diário bruto = valorAnterior * (jurosPct/100)
+        // comissão diária = valorAnterior * (comissaoPct/100)
+        const jurosDiario = valorAnterior * (jurosPct / 100);
+        const comissaoDiaria = valorAnterior * (comissaoPct / 100);
+
+        // Valor após aplicar liquido = valorAnterior + jurosDiario - comissaoDiaria
+        const valorNovo = valorAnterior + jurosDiario - comissaoDiaria;
+
+        // rendimento líquido diário (valorNovo - valorAnterior)
+        const rendimentoDiario = valorNovo - valorAnterior;
+
+        // acumula
+        totalRendimento += rendimentoDiario;
+        totalComissao += comissaoDiaria;
+
+        // atualiza para próximo dia
+        valorAtual = valorNovo;
+
+        html += `<tr>
+          <td class="left">${i}</td>
+          <td>${valorAtual.toFixed(4)}</td>
+          <td>${rendimentoDiario.toFixed(4)}</td>
+        </tr>`;
+      }
+
+      html += '</tbody></table>';
+      tabelaContainer.innerHTML = html;
+
+      // resultados resumidos
+      const ganhoAcumulado = valorAtual - valor;
+      resultadoEl.style.color = '#bfffee';
+      resultadoEl.innerHTML = `<strong>Final após ${dias} dias:</strong> ${valorAtual.toFixed(4)} USDT`;
+
+      summary.innerHTML = `
+        <div class="pill">Valor inicial: ${valor.toFixed(4)} USDT</div>
+        <div class="pill">Taxa líquida diária: ${(taxaLiquida*100).toFixed(2)}%</div>
+        <div class="pill">Rendimento acumulado: ${ganhoAcumulado.toFixed(4)} USDT</div>
+        <div class="pill">Comissão total aproximada: ${totalComissao.toFixed(4)} USDT</div>
       `;
+    }
+
+    function limpar(){
+      document.getElementById('valor').value = '';
+      document.getElementById('dias').value = '';
+      document.getElementById('opcao').value = '1';
+      document.getElementById('resultado').textContent = '';
+      document.getElementById('tabela-container').innerHTML = '';
+      document.getElementById('summary').innerHTML = '';
     }
   </script>
 </body>
